@@ -7,6 +7,9 @@ namespace from_game9
 {
     public partial class Form1 : Form
     {
+        public string Score { get; private set; }
+        public string GameName { get; private set; } = "테트리스";
+
         public const int BoardWidth = 10;
         public const int BoardHeight = 20;
         private const int BlockSize = 30;
@@ -26,6 +29,12 @@ namespace from_game9
         {
             InitializeComponent();
             usedTetrominos = new HashSet<string>();
+
+            // 게임 창 크기 고정
+            this.ClientSize = new Size(473, 626);  // 창 크기  설정
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;  // 창 크기 변경 불가
+            this.MaximizeBox = false;  // 최대화 버튼 비활성화
+            this.MinimizeBox = false;  // 최소화 버튼 비활성화
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -37,6 +46,7 @@ namespace from_game9
         {
             board = new int[BoardWidth, BoardHeight];
             nextTetrominos = new Tetromino[1]; // 다음 블록 3개
+            score = 0; // 점수 초기화
             gameTimer = new Timer();
             gameTimer.Interval = 500; // 0.5초마다 블록 떨어짐
             gameTimer.Tick += GameTimer_Tick;
@@ -262,80 +272,151 @@ namespace from_game9
                         currentTetromino.X--;
                     }
                     break;
+
                 case Keys.Right:
                     if (IsValidPosition(currentTetromino, 1, 0))
                     {
                         currentTetromino.X++;
                     }
                     break;
+
                 case Keys.Down:
-                    MoveDown();
+                    if (IsValidPosition(currentTetromino, 0, 1))
+                    {
+                        currentTetromino.Y++;
+                    }
                     break;
+
                 case Keys.Up:
                     currentTetromino.Rotate();
                     if (!IsValidPosition(currentTetromino))
                     {
-                        currentTetromino.Rotate(); // 원래 상태로 되돌림
-                        currentTetromino.Rotate();
-                        currentTetromino.Rotate();
+                        currentTetromino.Rotate(-1); // 회전 취소
                     }
                     break;
-                case Keys.Space: // 스페이스바를 눌렀을 때
+
+                case Keys.Space:
                     while (IsValidPosition(currentTetromino, 0, 1))
                     {
                         currentTetromino.Y++;
                     }
-                    MoveDown(); // 블록이 바닥에 닿았을 때 처리
+                    MergeTetromino();
+                    ClearLines();
+                    SpawnTetromino();
                     break;
             }
-            Invalidate(); // 폼을 다시 그리기
+
+            Invalidate();
             return base.ProcessCmdKey(ref msg, keyData);
         }
-    }
 
-    public class Tetromino
-    {
-        public int[,] Shape { get; private set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-
-        private static readonly int[][,] TetrominoShapes = new int[][,]
+        // 점수 반환 메서드
+        public string GetScore(int score)
         {
-            new int[,] { { 1, 1, 1, 1 } }, // I
-            new int[,] { { 1, 1, 1 }, { 0, 1, 0 } }, // T
-            new int[,] { { 1, 1 }, { 1, 1 } }, // O
-            new int[,] { { 0, 1, 1 }, { 1, 1, 0 } }, // S
-            new int[,] { { 1, 1, 0 }, { 0, 1, 1 } }, // Z
-            new int[,] { { 1, 0, 0 }, { 1, 1, 1 } }, // L
-            new int[,] { { 0, 0, 1 }, { 1, 1, 1 } }  // J
-        };
-
-        public static Tetromino CreateRandomTetromino()
-        {
-            Random random = new Random();
-            int index = random.Next(TetrominoShapes.Length);
-            return new Tetromino
-            {
-                Shape = TetrominoShapes[index],
-                X = Form1.BoardWidth / 2 - TetrominoShapes[index].GetLength(1) / 2,
-                Y = 0
-            };
+            Score = score.ToString(); // 점수를 문자열로 저장
+            this.Close(); // 폼 닫기
+            return Score; // 점수 반환
         }
 
-        public void Rotate()
+        // 게임 종료 메서드
+        private string 게임_종료_시(int currentScore)
         {
-            int width = Shape.GetLength(1);
-            int height = Shape.GetLength(0);
-            int[,] newShape = new int[width, height];
+            string finalScore = GetScore(currentScore); // 점수를 반환받으면서 폼 닫기
+            return finalScore; // 점수 반환
+        }
 
-            for (int y = 0; y < height; y++)
+        //private void GameOver()
+        //{
+        //    GameForm gameForm = new GameForm();
+        //    string finalScore = gameForm.게임_종료_시(score); // 게임 종료 시 점수 반환
+        //    MessageBox.Show($"최종 점수: {finalScore}"); // 점수 표시
+        //}
+
+        //호출방식
+
+
+
+        // 테트로미노 클래스
+        public class Tetromino
+        {
+            public int[,] Shape { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+
+            private static Random random = new Random();
+
+            public static Tetromino CreateRandomTetromino()
             {
-                for (int x = 0; x < width; x++)
+                int shapeType = random.Next(7);
+                Tetromino tetromino = new Tetromino();
+                tetromino.X = Form1.BoardWidth / 2 - 1;
+                tetromino.Y = 0;
+
+                switch (shapeType)
                 {
-                    newShape[x, height - 1 - y] = Shape[y, x];
+                    case 0: // I
+                        tetromino.Shape = new int[,] {
+                        { 1, 1, 1, 1 }
+                    };
+                        break;
+                    case 1: // O
+                        tetromino.Shape = new int[,] {
+                        { 1, 1 },
+                        { 1, 1 }
+                    };
+                        break;
+                    case 2: // T
+                        tetromino.Shape = new int[,] {
+                        { 0, 1, 0 },
+                        { 1, 1, 1 }
+                    };
+                        break;
+                    case 3: // L
+                        tetromino.Shape = new int[,] {
+                        { 1, 0, 0 },
+                        { 1, 1, 1 }
+                    };
+                        break;
+                    case 4: // J
+                        tetromino.Shape = new int[,] {
+                        { 0, 0, 1 },
+                        { 1, 1, 1 }
+                    };
+                        break;
+                    case 5: // S
+                        tetromino.Shape = new int[,] {
+                        { 0, 1, 1 },
+                        { 1, 1, 0 }
+                    };
+                        break;
+                    case 6: // Z
+                        tetromino.Shape = new int[,] {
+                        { 1, 1, 0 },
+                        { 0, 1, 1 }
+                    };
+                        break;
+                }
+
+                return tetromino;
+            }
+
+            // 회전 메서드
+            public void Rotate(int times = 1)
+            {
+                for (int i = 0; i < times; i++)
+                {
+                    int[,] rotatedShape = new int[Shape.GetLength(1), Shape.GetLength(0)];
+                    for (int y = 0; y < Shape.GetLength(0); y++)
+                    {
+                        for (int x = 0; x < Shape.GetLength(1); x++)
+                        {
+                            rotatedShape[x, Shape.GetLength(0) - 1 - y] = Shape[y, x];
+                        }
+                    }
+                    Shape = rotatedShape;
                 }
             }
-            Shape = newShape;
         }
     }
 }
+

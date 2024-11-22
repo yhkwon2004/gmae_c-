@@ -78,7 +78,6 @@
             this.domainUpDown1.Size = new System.Drawing.Size(123, 173);
             this.domainUpDown1.TabIndex = 2;
             this.domainUpDown1.Text = "0";
-            this.domainUpDown1.SelectedItemChanged += new System.EventHandler(this.domainUpDown1_SelectedItemChanged);
             // 
             // domainUpDown2
             // 
@@ -99,7 +98,6 @@
             this.domainUpDown2.TabIndex = 3;
             this.domainUpDown2.Text = "0";
             this.domainUpDown2.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.domainUpDown2.SelectedItemChanged += new System.EventHandler(this.domainUpDown2_SelectedItemChanged);
             // 
             // domainUpDown3
             // 
@@ -119,7 +117,6 @@
             this.domainUpDown3.Size = new System.Drawing.Size(123, 173);
             this.domainUpDown3.TabIndex = 4;
             this.domainUpDown3.Text = "0";
-            this.domainUpDown3.SelectedItemChanged += new System.EventHandler(this.domainUpDown3_SelectedItemChanged);
             // 
             // hit
             // 
@@ -145,7 +142,6 @@
             this.listView1.Sorting = System.Windows.Forms.SortOrder.Descending;
             this.listView1.TabIndex = 6;
             this.listView1.UseCompatibleStateImageBehavior = false;
-            this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
             // Form1
             // 
@@ -161,6 +157,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
